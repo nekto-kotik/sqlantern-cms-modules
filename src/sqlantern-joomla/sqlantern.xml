@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="1.0" type="plugin" group="system" method="upgrade">
+	<name>plg_system_sqlantern</name>
+	<author>SQLantern</author>
+	<creationDate>August 2023</creationDate>
+	<copyright>(C) 2023 Misha Grafski AKA nekto, Liana Militovska AKA rivolgimento</copyright>
+	<license>GNU General Public License v3.0</license>
+	<authorEmail>nekto@nekto.com.ua</authorEmail>
+	<authorUrl>https://github.com/nekto-kotik/sqlantern-cms-modules</authorUrl>
+	<version>1.0.0</version>
+	<description>SQLantern and Joomla integration</description>
+	<files>
+		<filename plugin="sqlantern">sqlantern.php</filename>
+	</files>
+	<scriptfile>install.php</scriptfile>
+</extension>

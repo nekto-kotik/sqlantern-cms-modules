@@ -87,7 +87,7 @@ SQLantern module is _not a modification_, and cannot really conflict with anythi
 There is no need to _refresh modifications_ to enable or disable the module.
 
 ### Uninstallation
-**OpenCart 2**: There is no real uninstallation, unfortunately. You have to delete the files manually (refer to `src/sqlantern-opencart/upload` for the list of files to delete).
+**OpenCart 2**: There is no real uninstallation, unfortunately. You have to delete the files manually (refer to `src/sqlantern-opencart/upload` for the list of files to delete).\
 **OpenCart 3**: Delete it in "Extensions > Installer" to uninstall, like most other extensions.
 
 ### Limitations of the OpenCart integration

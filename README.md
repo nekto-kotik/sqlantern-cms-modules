@@ -72,11 +72,6 @@ Joomla 3.5+\
 Joomla 4.x
 
 ## SQLantern for OpenCart
-### Before you install
-To install SQLantern in OpenCart 3, a free "Localcopy OCMOD Install Fix" ("localcopy-oc3") modification is **required**. Install it first.\
-_("Localcopy OCMOD Install Fix" is not affiliated with SQLantern and its authors; we take no responsibility, try it on a copy of your website first.)_\
-If you get "The directory admin/sqlantern-opencart is not allowed to be written to" error when installing the SQLantern extension, you don't have the "Localcopy Fix".
-
 ### Installation
 Download `sqlantern_opencart.ocmod.zip` right here on GitHub (from the files list or from the "Releases") or from [sqlantern.com](https://sqlantern.com/).\
 Install it in "Extensions > Installer".\
@@ -92,7 +87,8 @@ SQLantern module is _not a modification_, and cannot really conflict with anythi
 There is no need to _refresh modifications_ to enable or disable the module.
 
 ### Uninstallation
-Delete it in "Extensions > Installer" to uninstall, like most other extensions.
+**OpenCart 2**: There is no real uninstallation, unfortunately. You have to delete the files manually (refer to `src/sqlantern-opencart/upload` for the list of files to delete).
+**OpenCart 3**: Delete it in "Extensions > Installer" to uninstall, like most other extensions.
 
 ### Limitations of the OpenCart integration
 Only the "mysqli" database driver is supported.\

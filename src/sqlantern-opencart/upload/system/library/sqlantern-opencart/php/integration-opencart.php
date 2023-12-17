@@ -27,7 +27,7 @@ define(
 	mb_substr(
 		pathinfo($_SERVER["SCRIPT_FILENAME"], PATHINFO_DIRNAME),
 		0,
-		-1 * mb_strlen("/admin/sqlantern-opencart/php")
+		-1 * mb_strlen("/system/library/sqlantern-opencart/php")
 	)
 );
 

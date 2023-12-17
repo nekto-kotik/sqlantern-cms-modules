@@ -1,0 +1,4 @@
+# this rule is important, because OpenCart out of the box forbids access to the whole "/system"
+<Files *.*>
+Allow from all
+</Files>

@@ -32,7 +32,7 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 			
 			if ($htaccessRenamed) {	// only do it once
 				/*
-				Add ".htaccess" to the extension files, so it's deleted on removing the extension. Keep it clean.
+				Add newly created ".htaccess" to the extension files, so it's deleted on removing the extension. Keep it clean.
 				Very oddly and inconsistently, uninstallation deletes hidden files correctly. And upload handler deletes temporary hidden files, too. They are just not being copied to the destination, that's the only problem, it seems.
 				*/
 				
@@ -59,7 +59,7 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 			$events = &$this->model_extension_event;
 		}
 		
-		// NOTE . . . Uninstalling extension in OpenCart 3 doesn't run extension's `uninstall` and leaves the events behind (alongside access rights). I think it should, but there might be unwanted side effect (but shouldn't, it just needs testing with multiple extensions).
+		// NOTE . . . Uninstalling extension in OpenCart 3 doesn't run extension's `uninstall` and leaves the events behind (alongside access rights). I think it should, but there might be unwanted side effect (there shouldn't be, but it needs testing with multiple extensions).
 		$events->addEvent(
 			"sqlantern_menu_item",
 			"admin/view/common/column_left/before",

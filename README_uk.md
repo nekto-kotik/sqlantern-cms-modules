@@ -1,5 +1,5 @@
 # Розширення SQLantern для CMS (Joomla, OpenCart)
-Поточна версія: v1.9.1β (публічна бета)\
+Поточна версія: v1.9.2β (публічна бета)\
 Ліцензія: [GNU General Public License v3.0](LICENSE)
 
 Це офіційний репозиторій розширень SQLantern для CMS: інтеграції SQLantern із Joomla та OpenCart.\

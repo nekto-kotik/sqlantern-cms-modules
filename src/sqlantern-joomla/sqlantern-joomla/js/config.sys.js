@@ -39,6 +39,7 @@ panel.listEvents = (tmp, drag) => {
 			connection: 'joomla',
 			database: config.singleDatabaseName,
 			newDB: true,
+			quote: '`',
 		};
 		let newTab = new Tab(drag, obj);
 		newTab.tab.querySelector('.db-name').textContent = obj.database;

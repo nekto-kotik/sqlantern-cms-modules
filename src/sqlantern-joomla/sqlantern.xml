@@ -7,7 +7,7 @@
 	<license>GNU General Public License v3.0</license>
 	<authorEmail>nekto@nekto.com.ua</authorEmail>
 	<authorUrl>https://github.com/nekto-kotik/sqlantern-cms-modules</authorUrl>
-	<version>1.9.3</version>
+	<version>1.9.4</version>
 	<description>SQLantern and Joomla integration</description>
 	<files>
 		<filename plugin="sqlantern">sqlantern.php</filename>

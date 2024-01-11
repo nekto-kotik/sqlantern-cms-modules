@@ -3,11 +3,11 @@
 	<name>plg_system_sqlantern</name>
 	<author>SQLantern</author>
 	<creationDate>August 2023</creationDate>
-	<copyright>(C) 2023 Misha Grafski AKA nekto, Svitlana Militovska</copyright>
+	<copyright>(C) 2023, 2024 Misha Grafski AKA nekto, Svitlana Militovska</copyright>
 	<license>GNU General Public License v3.0</license>
 	<authorEmail>nekto@nekto.com.ua</authorEmail>
 	<authorUrl>https://github.com/nekto-kotik/sqlantern-cms-modules</authorUrl>
-	<version>1.9.4</version>
+	<version>1.9.5</version>
 	<description>SQLantern and Joomla integration</description>
 	<files>
 		<filename plugin="sqlantern">sqlantern.php</filename>

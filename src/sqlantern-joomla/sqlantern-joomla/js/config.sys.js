@@ -76,7 +76,7 @@ window.addEventListener(
 );
 
 let errorText;
-fetch(`php/?cms_settings`)
+fetch(`${config.backend}?cms_settings`)
 	.then(res => res.text())
 	.then(text => {
 		errorText = text;

@@ -36,7 +36,7 @@ class PlgSystemSqlantern extends JPlugin {
 		// Control Panel + module "mod_menu" = this is the module to change
 		
 		$isControlPanel = false;
-		 
+		
 		$versionBelow37 = version_compare(JVERSION, "3.7", "<");
 		$version37 = version_compare(JVERSION, "3.7", ">=");
 		$version4 = version_compare(JVERSION, "4", ">=");	// "4.0" >= "4" == true, I tested
@@ -95,39 +95,6 @@ class PlgSystemSqlantern extends JPlugin {
 				$module->content = implode($explodeBy, $parts);
 			}
 		}
-		
-	}
-	
-	public function onAfterDispatch() {
-		//var_dump(["???"]);	// this works in both Site and Control panel, so the plugin is installed and is run
-	}
-	
-	public function onAfterGetMenuTypeOptions( &$list, MenusModelMenutypes $model ) {
-		// this is triggered in the Control Panel, in menu item form (when editing menu item)
-		/*
-		https://docs.joomla.org/Plugin/Events/Menu
-		
-		`&list` A reference to the object that holds all the menu types
-		
-		`MenusModelMenutypes` The model instance. This is in order for functions to add their custom types to the reverse lookup (in addition to adding them in the list property) via the addReverseLookupUrl function in the model.
-		
-		Used in files:
-		administrator/components/com_menus/models/menutypes.php
-		*/
-		
-		/*
-		As I understand it onAfterGetMenuTypeOptions allows you to add more menu types when you are creating menu items for the joomla frontend menus.
-		https://joomla.stackexchange.com/questions/21878/what-is-the-difference-between-onaftergetmenutypeoptions-and-onbeforerendermenui
-		*/
-		
-		//var_dump(["???"]);
-		
-		//var_dump(["list" => $list, ]);
-	}
-	
-	public function onBeforeRenderMenuItems( $wtf ) {
-		// this is triggered in the Control Panel, in menu list
-		//var_dump(["!!!"]);
 	}
 }
 //

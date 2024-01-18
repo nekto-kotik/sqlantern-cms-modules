@@ -94,7 +94,7 @@ window.addEventListener(
 );
 
 let errorText;
-fetch(`php/?cms_settings&opencart_token=${config.token}`)
+fetch(`${config.backend}?cms_settings&opencart_token=${config.token}`)
 	.then(res => res.text())
 	.then(text => {
 		errorText = text;

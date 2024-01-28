@@ -1,7 +1,7 @@
 <?php
 /*
 The base PHP lib/pgsql implementation for SQLantern by nekto
-v1.0.5 alpha | 24-01-18
+v1.0.7 alpha | 24-01-28
 
 This file is part of SQLantern Database Manager
 Copyright (C) 2022, 2023, 2024 Misha Grafski AKA nekto
@@ -172,8 +172,9 @@ function sqlArray( $queryString ) {
 		pg_free_result($res);
 		return $answer;
 	}
-	else
+	else {
 		return null;
+	}
 }
 
 // XXX  
@@ -356,7 +357,6 @@ function sqlListTables() {
 		unset($t);
 	}
 	
-	//return $tables;
 	return [
 		"tables" => $tables,
 		"views" => $views,
@@ -440,6 +440,10 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 				AND catalog.relname = '{$tableNameSql}'
 		ORDER BY attr.attnum ASC
 	");
+	/*
+	I wonder if I should use double quotes inside single quotes here as well, like in the indexes below.
+	Maybe I'm just lucky that it works in my tests, LOL.
+	*/
 	
 	/*
 	MariaDB/MySQL have "Key" in response to "DESCRIBE {table}"/"SHOW COLUMNS FROM {table}", and the possible values are:
@@ -561,13 +565,26 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 		JOIN pg_catalog.pg_attribute AS attr
 			ON	attr.attrelid = cls.oid
 				AND attr.attnum = ANY(idx.indkey::smallint[])
-		WHERE 	idx.indrelid = '{$tableNameSql}'::regclass
-				AND cls.relnamespace = '{$schemaNameSql}'::regnamespace
+		WHERE 	idx.indrelid = '\"{$schemaNameSql}\".\"{$tableNameSql}\"'::regclass
+				AND cls.relnamespace = '\"{$schemaNameSql}\"'::regnamespace
 	");
+	/*
+	Important note about the query above:
+	- using only table name is not safe
+	- using only single quotes is not safe
+	- using table name with schema name ("schema.table") is the same as only table name
+	- using double quotes INSIDE single quotes is safe!!!
+	- but only when using table name with schema name ("schema.table") in double quotes INSIDE single quotes!!!
+	
+	Table name might internally be `employeedepartmenthistory`, or `humanresources.employeedepartmenthistory`, or `"HumanResources"."EmployeeDepartmentHistory"` (in double quotes!), or `humanresources."EmployeeDepartmentHistory"` (partially in double quotes!).
+	So, that's fun.
+	
+	And real indexes have names like `humanresources."PK_EmployeeDepartmentHistory_BusinessEntityID_StartDate_Departm"` in adapted AdventureWorks. (Although I assume the adaptation is not ideal, because the schemas and tables should have probably been mixed-case, as well. And columns, they are also all lowercase.)
+	*/
 	//precho($indexesRaw); die();
 	
 	$indexes = [];
-	$indexNames = array_unique(array_column($indexesRaw, "index_name"));	// the query above retuns multiple rows for each index, so this is an acceptable workaround, in my mind
+	$indexNames = $indexesRaw ? array_unique(array_column($indexesRaw, "index_name")) : [];	// the query above retuns multiple rows for each index, so this is an acceptable workaround, in my mind
 	
 	foreach ($indexNames as $i) {
 		$filtered = array_values(array_filter(	// `array_values` to use `filtered[0]` below, otherwise `array_filter` preserves original keys
@@ -576,13 +593,14 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 				return $v["index_name"] == $i;
 			}
 		));
-		$indexColumns = explode(" ", $filtered[0]["indkey"]);
+		//$indexColumns = explode(" ", $filtered[0]["indkey"]);
 		//var_dump($indexColumns);
 		$indexes[] = [
 			"Index" => $i,
 			"Columns" => implode(
-				" + ",
-				array_column(
+				SQL_INDEX_COLUMNS_CONCATENATOR,
+				// this was a completely wrong idea, columns' names are right here in `$filtered` already actually, and the indkey doesn't follow the logic I expected from it
+				/*array_column(
 					array_filter(
 						$structure,
 						function ($k) use ($indexColumns) {
@@ -591,7 +609,8 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 						ARRAY_FILTER_USE_KEY
 					),
 					"Field"
-				)
+				)*/
+				array_column($filtered, "attname")
 			),
 			"Primary" => $filtered[0]["primary"] ? "yes" : "no",
 			"Unique" => $filtered[0]["unique"] ? "yes" : "no",
@@ -602,7 +621,7 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 	$keysLabels = json_decode(SQL_KEYS_LABELS, true);
 	foreach ($structure as &$s) {
 		$filtered = array_filter(
-			$indexesRaw,
+			$indexesRaw ? $indexesRaw : [],
 			function ($v) use ($s) {
 				return $v["attname"] == $s["Field"];
 			}
@@ -628,25 +647,25 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 	}
 	unset($s);
 	
+	// <del>apparently, there is no such thing as "unique" or "cardinality" in PostgreSQL...</del>
+	// <del>I should really look deeper into it, I find it hard to believe Postgres doesn't show that important info
+	// but I also know indexes here are very different from MySQL</del>
+	// I haven't found "cardinality" yet, but I've solved the "unique" and "primary" puzzles.
+	/*
+	"indexes" => sqlArray("
+		SELECT
+			indexname AS \"Index\",
+			'' AS \"Columns\",
+			indexdef AS \"Indexdef\"
+		FROM pg_indexes
+		WHERE 	schemaname = '{$schemaNameSql}'
+				AND tablename = '{$tableNameSql}'
+		
+	"),
+	*/
+	
 	return [
 		"structure" => $structure,
-		
-		// <del>apparently, there is no such thing as "unique" or "cardinality" in PostgreSQL...</del>
-		// <del>I should really look deeper into it, I find it hard to believe Postgres doesn't show that important info
-		// but I also know indexes here are very different from MySQL</del>
-		// I haven't found "cardinality" yet, but I've solved the "unique" and "primary" puzzles.
-		/*
-		"indexes" => sqlArray("
-			SELECT
-				indexname AS \"Index\",
-				'' AS \"Columns\",
-				indexdef AS \"Indexdef\"
-			FROM pg_indexes
-			WHERE 	schemaname = '{$schemaNameSql}'
-					AND tablename = '{$tableNameSql}'
-			
-		"),
-		*/
 		"indexes" => $indexes,
 	];
 }
@@ -875,27 +894,25 @@ function sqlRunQuery( $query, $page, $fullTexts ) {
 		}
 		$fieldNames = deduplicateColumnNames($fields, $tables);
 		
+		$resultSize = 0;
+		$rowNumber = 1;	// human-style row numbers for the error message
+		
 		// associative way, losing columns with duplicate names:
 		/*while ($row = pg_fetch_array($dbResult, null, PGSQL_ASSOC)) {
 			$res["rows"][] = $row;
 		}*/
 		// listing all columns, even if they have the same name:
 		while ($row = pg_fetch_array($dbResult, null, PGSQL_NUM)) {
-			$fixedRow = [];
-			foreach ($row as $fieldIdx => $v) {
-				$fixedRow[$fieldNames[$fieldIdx]] = $v;
-			}
-			$res["rows"][] = $fixedRow;
-		}
-		
-		foreach ($res["rows"] as &$row) {	// rows
+			/*
+			Trim the values to max length (if set) as they are read, to use less RAM overall (go higher-lower, higher-lower, instead of higher-higher-higher-higher).
+			*/
 			foreach ($row as &$v) {	// columns in row
 				if (is_null($v)) {	// leave NULL as is
 					continue;
 				}
 				
 				// BLOB and other BINARY data is not JSON compatible and MUST be treated, unfortunately
-				if (json_encode($v) === false) {	// this proved to be the fastest way 
+				if (json_encode($v) === false) {	// this proved to be the fastest way < takes additional RAM though :-( 
 					$v = ["type" => "blob", ];	// TODO . . . download BINARY/BLOB
 					continue;
 				}
@@ -909,8 +926,21 @@ function sqlRunQuery( $query, $page, $fullTexts ) {
 					;
 				}
 			}
+			unset($v);
+			
+			$fixedRow = [];
+			foreach ($row as $fieldIdx => $v) {
+				$fixedRow[$fieldNames[$fieldIdx]] = $v;
+			}
+			$res["rows"][] = $fixedRow;
+			
+			// check data size threshold and throw an error if surpassed
+			$resultSize += arrayRowBytes($fixedRow);
+			if ($resultSize > SQL_DATA_TOO_BIG) {
+				fatalError(sprintf(translation("data-overflow"), $numberFormat($rowNumber)));
+			}
+			$rowNumber++;
 		}
-		unset($row, $v);
 		
 		if (!$res["num_rows"]) {
 			$res["num_rows"] = count($res["rows"]);
@@ -920,7 +950,7 @@ function sqlRunQuery( $query, $page, $fullTexts ) {
 		$affectedRows = pg_affected_rows($dbResult);
 		if ($affectedRows) {	// don't confuse users with "affected rows: 0" on TRUNCATE, basically
 			$res["rows"] = [
-				["affected_rows" => $affectedRows],
+				["affected_rows" => $numberFormat($affectedRows)],
 			];
 		}
 		else {	// "executed" is not ideal and a bit confusing, too, but that's what it is at this point

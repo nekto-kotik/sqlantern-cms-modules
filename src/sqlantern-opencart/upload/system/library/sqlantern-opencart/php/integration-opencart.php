@@ -1,7 +1,7 @@
 <?php
 /*
 This file is part of SQLantern CMS integration
-Copyright (C) 2023 Misha Grafski AKA nekto
+Copyright (C) 2023, 2024 Misha Grafski AKA nekto
 License: GNU General Public License v3.0
 https://github.com/nekto-kotik/sqlantern-cms-modules
 https://github.com/nekto-kotik/sqlantern
@@ -180,11 +180,11 @@ $ok = true;
 
 // get token from the URL or from the cookie
 $tokenCookieName = "sqlantern_opencart_token";
-if (isset($_GET["opencart_token"]) && isset($_GET["opencart_token"])) {	// sent and not empty (will be sent, but EMPTY on the manual page refresh)
-	setcookie($tokenCookieName, $_GET["opencart_token"]);	// plan per-session cookie with no options at all, not even "path"
+if (array_key_exists("opencart_token", $_GET) && $_GET["opencart_token"]) {	// sent and not empty (will be sent, but EMPTY on the manual page refresh)
+	setcookie($tokenCookieName, $_GET["opencart_token"], 0, "/");	// plan per-session cookie with no options at all, not even "path"
 	$_COOKIE[$tokenCookieName] = $_GET["opencart_token"];
 }
-$userToken = isset($_COOKIE[$tokenCookieName]) ? $_COOKIE[$tokenCookieName] : "";
+$userToken = array_key_exists($tokenCookieName, $_COOKIE) ? $_COOKIE[$tokenCookieName] : "";
 
 // module must be enabled!
 $check = sqlRow("

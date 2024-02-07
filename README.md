@@ -1,5 +1,5 @@
 # SQLantern CMS extensions (Joomla, OpenCart)
-Current version: v1.9.8β (public beta)\
+Current version: v1.9.9β (public beta)\
 License: [GNU General Public License v3.0](LICENSE)\
 [Українською](README_uk.md)
 

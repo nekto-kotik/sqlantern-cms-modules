@@ -1,7 +1,7 @@
 <?php
 /*
 The base PHP lib/pgsql implementation for SQLantern by nekto
-v1.0.8 alpha | 24-02-06
+v1.0.10 alpha | 24-03-05
 
 This file is part of SQLantern Database Manager
 Copyright (C) 2022, 2023, 2024 Misha Grafski AKA nekto
@@ -292,6 +292,14 @@ function sqlListTables() {
 				'view' AS type
 			FROM pg_catalog.pg_views
 			WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+			-- -- --
+			UNION ALL
+			-- -- --
+			SELECT
+				CONCAT(CASE WHEN {$addSchema} = 0 THEN '' ELSE CONCAT(schemaname, '.') END, matviewname) AS \"Table\",
+				'view' AS type
+			FROM pg_catalog.pg_matviews
+			WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
 		) AS tables_views
 		ORDER BY tables_views.\"Table\" ASC
 	";
@@ -318,7 +326,7 @@ function sqlListTables() {
 			WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
 		");
 		//var_dump(["rows" => $rows, ]);
-		$rowsTablesNames = array_column($rows, "table_name");
+		$rowsTablesNames = array_column($rows ? $rows : [], "table_name");
 		
 		// a great source: https://wiki.postgresql.org/wiki/Disk_Usage
 		// I don't know if that's a slow way on big databases :-(
@@ -615,6 +623,205 @@ function sqlDescribeTable( $databaseName, $tableName ) {
 			"Primary" => $filtered[0]["primary"] ? "yes" : "no",
 			"Unique" => $filtered[0]["unique"] ? "yes" : "no",
 		];
+	}
+	
+	/*
+	Add foreign keys to the end of the list.
+	
+	The query I started with was:
+	SELECT
+		pg_constraint.connamespace::regnamespace AS schema_name,
+		pg_constraint.conrelid::regclass AS table_name,
+		pg_constraint.conname AS key_name,
+		pg_constraint.confrelid::regclass AS "ref_table_???",
+		pg_constraint.conkey::smallint[] AS ind_array,
+		-- conindid
+		' . . . ' AS sprtr,
+		attr.*
+	FROM pg_constraint
+	INNER JOIN pg_catalog.pg_attribute AS attr
+		ON 	attr.attrelid = pg_constraint.confrelid
+			AND attr.attnum = ANY(pg_constraint.confkey::smallint[])
+	WHERE contype = 'f'
+	ORDER BY conrelid::regclass ASC
+	
+	Multi-column keys are easy to find visually in this query results, they have more than 1 value in `ind_array` (comma-separated).
+	
+	This didn't work as I hoped, using arrays and ANY duplicated the rows:
+	SELECT
+		-- pg_constraint.connamespace::regnamespace AS schema_name,
+		-- pg_constraint.conrelid::regclass AS table_name,
+		pg_constraint.conname AS key_name,
+		-- pg_constraint.confrelid::regclass AS ref_table,
+		-- ' ? ' || '...' || 18740::regclass || STRING_AGG(attr.attname, ' [x] ') AS attr_names
+		CONCAT(pg_constraint.confrelid::regclass, '.', STRING_AGG(local_col.attname, ' [x] ')) AS loc_fields,
+		CONCAT(pg_constraint.confrelid::regclass, '.', STRING_AGG(foreign_col.attname, ' [x] ')) AS ext_fields
+		-- pg_constraint.conkey::smallint[] AS ind_array,
+		-- conindid
+		-- ' . . . ' AS sprtr,
+		-- attr.*
+	FROM pg_constraint
+	INNER JOIN pg_catalog.pg_attribute AS local_col
+		ON 	local_col.attrelid = pg_constraint.conrelid
+			AND local_col.attnum = ANY(pg_constraint.conkey::smallint[])
+	INNER JOIN pg_catalog.pg_attribute AS foreign_col
+		ON 	foreign_col.attrelid = pg_constraint.confrelid
+			AND foreign_col.attnum = ANY(pg_constraint.confkey::smallint[])
+	WHERE 	pg_constraint.connamespace = 'public'::regnamespace
+			AND pg_constraint.conrelid = 'datsrcln'::regclass
+			AND contype = 'f'
+	-- GROUP BY schema_name, table_name, key_name, pg_constraint.confrelid
+	GROUP BY pg_constraint.conname, pg_constraint.confrelid
+	-- ORDER BY conrelid::regclass ASC
+	ORDER BY key_name ASC
+	
+	And I ended with the following monstrosity, which I probably should be ashamed of...
+	SELECT
+		-- pg_constraint.connamespace::regnamespace AS schema_name,
+		-- pg_constraint.conrelid::regclass AS table_name,
+		pg_constraint.conname AS key_name,
+		-- pg_constraint.confrelid,
+		-- pg_constraint.confrelid::regclass AS ref_table,
+		-- pg_constraint.conkey::smallint[] AS ind_array,
+		-- pg_constraint.confkey::smallint[] AS ref_ind_array,
+		-- loc_columns.*,
+		-- ref_columns.*
+		loc_columns.loc_fields,
+		CONCAT(pg_constraint.confrelid::regclass, '.', ref_columns.ref_fields)
+	FROM pg_constraint
+	INNER JOIN (
+		SELECT
+			pg_constraint.conname,
+			STRING_AGG(attr.attname, ' [x] ') AS loc_fields
+		FROM pg_constraint
+		INNER JOIN pg_catalog.pg_attribute AS attr
+			ON 	attr.attrelid = pg_constraint.conrelid
+				AND attr.attnum = ANY(pg_constraint.conkey::smallint[])
+		WHERE 	pg_constraint.connamespace = 'public'::regnamespace
+				AND pg_constraint.conrelid = 'datsrcln'::regclass
+				AND pg_constraint.contype = 'f'
+		GROUP BY pg_constraint.conname
+	) AS loc_columns
+		ON loc_columns.conname = pg_constraint.conname
+	INNER JOIN (
+		SELECT
+			pg_constraint.conname,
+			STRING_AGG(attr.attname, ' [x] ') AS ref_fields
+		FROM pg_constraint
+		INNER JOIN pg_catalog.pg_attribute AS attr
+			ON 	attr.attrelid = pg_constraint.confrelid
+				AND attr.attnum = ANY(pg_constraint.confkey::smallint[])
+		WHERE 	pg_constraint.connamespace = 'public'::regnamespace
+				AND pg_constraint.conrelid = 'datsrcln'::regclass
+				AND pg_constraint.contype = 'f'
+		GROUP BY pg_constraint.conname
+	) AS ref_columns
+		ON ref_columns.conname = pg_constraint.conname
+	WHERE 	pg_constraint.connamespace = 'public'::regnamespace
+			AND pg_constraint.conrelid = 'datsrcln'::regclass
+			AND pg_constraint.contype = 'f'
+	ORDER BY conrelid::regclass ASC
+	
+	I found that ref table contains schema when needed, PostgreSQL does it automatically in `::regclass`.
+	
+	NOTE . . . I want to understand this one day:
+	`UNNEST((select array_agg(attname) from pg_attribute where attrelid = c.conrelid and array[attnum] <@ c.conkey)) as referencing_col,`
+	
+	Like here:
+	https://stackoverflow.com/questions/72679453/postgresql-sql-script-to-get-a-list-of-all-foreign-key-references-to-a-table
+	
+	
+	FIXME . . . AdventureWorks.sales.salesorderdetail has `columns` listed in wrong order: "productid + specialofferid" instead of "specialofferid + productid".
+	Foreign reference is correct: "sales.specialofferproduct.specialofferid + productid".
+	That's a known issue, but for an unknown reason :-(
+	pgAdmin lists them correctly, albeit very differently: "(specialofferid, productid) -> (specialofferid, productid)"
+	My query to continue with it:
+	SELECT
+		pg_constraint.connamespace::regnamespace AS schema_name,
+		pg_constraint.conrelid::regclass AS table_name,
+		pg_constraint.conname AS key_name,
+		pg_constraint.confrelid::regclass AS "ref_table_???",
+		pg_constraint.conkey::smallint[] AS ind_array,
+		-- conindid
+		' . . . ' AS sprtr,
+		attr.attname,
+		pg_constraint.*
+	FROM pg_constraint
+	INNER JOIN pg_catalog.pg_attribute AS attr
+		ON 	attr.attrelid = pg_constraint.confrelid
+			AND attr.attnum = ANY(pg_constraint.confkey::smallint[])
+	WHERE 	contype = 'f'
+			AND pg_constraint.conrelid = '"sales"."salesorderdetail"'::regclass
+	ORDER BY conrelid::regclass ASC
+	
+	I have very few multi-column foreign keys at hand to work it out.
+	*/
+	
+	$indexConcatenator = sqlEscape(SQL_INDEX_COLUMNS_CONCATENATOR);
+	$foreign = sqlArray("
+		SELECT
+			-- pg_constraint.connamespace::regnamespace AS schema_name,
+			-- pg_constraint.conrelid::regclass AS table_name,
+			pg_constraint.conname AS key_name,
+			-- pg_constraint.confrelid,
+			-- pg_constraint.confrelid::regclass AS ref_table,
+			-- pg_constraint.conkey::smallint[] AS ind_array,
+			-- pg_constraint.confkey::smallint[] AS ref_ind_array,
+			-- loc_columns.*,
+			-- ref_columns.*
+			loc_columns.loc_fields AS columns,
+			CONCAT(pg_constraint.confrelid::regclass, '.', ref_columns.ref_fields) AS ref
+		FROM pg_constraint
+		INNER JOIN (
+			SELECT
+				pg_constraint.conname,
+				STRING_AGG(attr.attname, '{$indexConcatenator}') AS loc_fields
+			FROM pg_constraint
+			INNER JOIN pg_catalog.pg_attribute AS attr
+				ON 	attr.attrelid = pg_constraint.conrelid
+					AND attr.attnum = ANY(pg_constraint.conkey::smallint[])
+			WHERE 	pg_constraint.connamespace = '\"{$schemaNameSql}\"'::regnamespace
+					AND pg_constraint.conrelid = '\"{$schemaNameSql}\".\"{$tableNameSql}\"'::regclass
+					AND pg_constraint.contype = 'f'
+			GROUP BY pg_constraint.conname
+		) AS loc_columns
+			ON loc_columns.conname = pg_constraint.conname
+		INNER JOIN (
+			SELECT
+				pg_constraint.conname,
+				STRING_AGG(attr.attname, '{$indexConcatenator}') AS ref_fields
+			FROM pg_constraint
+			INNER JOIN pg_catalog.pg_attribute AS attr
+				ON 	attr.attrelid = pg_constraint.confrelid
+					AND attr.attnum = ANY(pg_constraint.confkey::smallint[])
+			WHERE 	pg_constraint.connamespace = '\"{$schemaNameSql}\"'::regnamespace
+					AND pg_constraint.conrelid = '\"{$schemaNameSql}\".\"{$tableNameSql}\"'::regclass
+					AND pg_constraint.contype = 'f'
+			GROUP BY pg_constraint.conname
+		) AS ref_columns
+			ON ref_columns.conname = pg_constraint.conname
+		WHERE 	pg_constraint.connamespace = '\"{$schemaNameSql}\"'::regnamespace
+				AND pg_constraint.conrelid = '\"{$schemaNameSql}\".\"{$tableNameSql}\"'::regclass
+				AND pg_constraint.contype = 'f'
+		ORDER BY conrelid::regclass ASC
+	");
+	
+	if ($foreign) {
+		// indexes get an additional column if the table has foreign keys
+		foreach ($indexes as &$i) {
+			$i["Foreign reference"] = "";
+		}
+		unset($i);
+		
+		foreach ($foreign as $f) {
+			$indexes[] = [
+				"Index" => $f["key_name"],
+				"Columns" => $f["columns"],
+				"Primary" => "",	// "n/a" looks bad, IMHO
+				"Unique" => "",	// same thing
+				"Foreign reference" => $f["ref"],
+			];
+		}
 	}
 	
 	
@@ -987,24 +1194,40 @@ function sqlQueryTiming( $query ) {
 	
 	//$row = sqlRow("EXPLAIN (ANALYZE true, FORMAT JSON) {$query}");
 	
+	$phpTiming = false;
+	
 	$dbResult = pg_query($sys["db"]["link"], "EXPLAIN (ANALYZE true, FORMAT JSON) {$query}");
+	
 	if ($dbResult === false) {	// EXPLAIN failed, but it might be a valid EXPLAIN-imcompatible query
-		$timeBefore = microtime(true);	// `hrtime` is better, but it's PHP 7+ (7.3+ even?)
-		sqlRow($query);	// try running the query without EXPLAIN; if there is an error in query, `sqlRow` will throw it
-		$durationPHP = microtime(true) - $timeBefore;	// if we're here, the query was actually executed correctly, give at least some non-precise measurement...
-		return [
-			"timeMs" => "n/a (~" . round($durationPHP * 1000, 4) . ")",
-		];
+		$phpTiming = true;
 	}
 	else {
 		$row = ($dbResult && pg_num_rows($dbResult)) ? pg_fetch_array($dbResult, null, PGSQL_ASSOC) : null;
 		$keys = array_keys($row);
 		//var_dump(["row" => $row, ]);
 		$values = json_decode($row[$keys[0]], true);
-		//var_dump(["values" => $values, ]);
-		$durationMs = $values[0]["Planning Time"] + $values[0]["Execution Time"];	// `$values[0]` because only one query is analyzed, if I understand it correctly
+		//precho(["row" => $row, "values" => $values, "is_array" => is_array($values[0]), ]); die();
+		if (!is_array($values[0])) {
+			// Even "Utility statements have no plan structure" returns a JSON array with one value: "Utility Statement"
+			// So the `values` are not even empty, but are unusable.
+			// e.g. `EXPLAIN REFRESH MATERIALIZED VIEW`
+			$phpTiming = true;
+		}
+		else {	// JSON decoded
+			//var_dump(["values" => $values, ]);
+			$durationMs = $values[0]["Planning Time"] + $values[0]["Execution Time"];	// `$values[0]` because only one query is analyzed, if I understand it correctly
+			return [
+				"timeMs" => round($durationMs, 4),
+			];
+		}
+	}
+	
+	if ($phpTiming) {	// PostgreSQL timing not available, measure approximate duration in PHP
+		$timeBefore = microtime(true);	// `hrtime` is better, but it's PHP 7+ (7.3+ even?)
+		sqlRow($query);	// try running the query without EXPLAIN; if there is an error in query, `sqlRow` will throw it
+		$durationPHP = microtime(true) - $timeBefore;	// if we're here, the query was actually executed correctly, give at least some non-precise measurement...
 		return [
-			"timeMs" => round($durationMs, 4),
+			"timeMs" => "n/a (~" . round($durationPHP * 1000, 4) . ")",
 		];
 	}
 }

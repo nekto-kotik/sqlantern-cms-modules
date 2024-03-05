@@ -1912,8 +1912,8 @@ const panel = {
 					const length2 = document.querySelectorAll('.container .one-list .one-tab').length;
 					const elem = document.querySelector('.container .one-list .one-tab.connects');
 					if (length == 1 && length2 == 1 && elem) {
-						restore.init(arr[i]);
 						document.querySelector('.panel .states').click();
+						restore.init(arr[i]);
 					} else {
 						tmp.classList.add('confirm-restore');
 						line.classList.add('active');
@@ -1949,9 +1949,8 @@ const panel = {
 		};
 		
 		tmp.querySelector('.confirm-1 .btn-yes').addEventListener('click', () => {
-			restore.init(chosenState);
-			tmp.querySelector('.confirm-1 .btn-no').click();
 			document.querySelector('.panel .states').click();
+			restore.init(chosenState);
 		});
 		tmp.querySelector('.confirm-1 .btn-no').addEventListener('click', () => {
 			tmp.classList.remove('confirm-restore');
@@ -2533,6 +2532,10 @@ const state = {
 		tab.querySelector('.custom-name.active') ? obj.custom_name_class = true : '';
 		tab.querySelector('.table.rows .block-name.close') ? obj.block_rows_class = true : '';
 		
+		if (tab.querySelector('.page-block')) {
+			obj.cur_query = tab.querySelector('.cur-query').value;
+		}
+		
 		if (tab.querySelector('.custom-name')) {
 			const customName = tab.querySelector('.custom-name span').textContent;
 			const customInput = tab.querySelector('.custom-name input').value;
@@ -2825,6 +2828,10 @@ const restore = {
 		newTab.tab.querySelector('.auto-resize input').dispatchEvent(new Event('change'));
 		newTab.tab.querySelector('.query-block textarea').scrollTop = obj.textarea_scroll_top;
 		newTab.tab.querySelectorAll('.query-block .active').forEach(el => el.classList.remove('active'));
+		
+		if (obj.cur_query) {
+			newTab.tab.querySelector('.cur-query').value = obj.cur_query;
+		}
 		
 		if (obj.custom_name || obj.custom_name_input) {
 			newTab.tab.querySelector('.custom-name span').textContent = obj.custom_name;

@@ -25,6 +25,7 @@ define("SQL_SESSION_NAME", "SQLANTERN_SESS_ID");
 define("SQL_COOKIE_NAME", "sqlantern_client");
 define("SQL_CIPHER_METHOD", "aes-256-cbc");
 define("SQL_CIPHER_KEY_LENGTH", 32);
+define("SQL_NUMBER_FORMAT", "builtInNumberFormat");
 
 // since this file is linked in `index.php` before anything else, basically ANY modification can be written here and it is expected
 

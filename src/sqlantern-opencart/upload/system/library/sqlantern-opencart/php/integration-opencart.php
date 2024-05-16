@@ -70,6 +70,8 @@ function getSessionData() {
 		$sys["session"] = $_SESSION[$_COOKIE["default"]];
 	}
 	
+	$sys["date_timezone"] = array_key_exists("date_timezone", $_) ? $_["date_timezone"] : "UTC";
+	
 	//var_dump(["session_id" => session_id(), "_SESSION" => $_SESSION, ]); die();
 	//unset($_SESSION["connections"]); session_write_close();
 	session_abort();	// "Discard session array changes and finish session"
@@ -235,6 +237,14 @@ function userHasAccess( $userId, $token ) {
 }
 
 if ($ok && ($sys["session_engine"] == "db")) {
+	// There can be a discrepancy between PHP and DB time zones, which can lead to session not being found (wrong comparison of `NOW()` and `expired`), especially when session duration is short.
+	// It can also work the other way around: expired session can be treated as still good.
+	// Almost all servers I encounter are set to "UTC" in both PHP and DB, but it's not always so.
+	// e.g. PHP time zone "Europe/Warsaw" vs DB time zone "UTC"
+	date_default_timezone_set($sys["date_timezone"]);
+	$timeZoneSql = sqlEscape(date("P"));	// Difference to Greenwich time (GMT) with colon between hours and minutes	Example: +02:00
+	sqlQuery("SET time_zone = '{$timeZoneSql}'");
+	
 	$check = sqlRow("
 		SELECT data
 		FROM {$dbPre}session

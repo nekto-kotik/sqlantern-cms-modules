@@ -3,7 +3,7 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 	
 	public function install() {
 		/*
-		Problem: OpenCart installer doesn't copy (because of the irresponsible `glob` with "*").
+		Problem: OpenCart installer doesn't copy Linux hidden files (because of the irresponsible `glob` with "*").
 		Solution: Deliver ".htaccess" as "htaccess.txt" and rename on install, if it's not renamed yet.
 		*/
 		$htaccessRenamed = false;
@@ -12,6 +12,11 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 			rename("{$sqlanternPath}/htaccess.txt", "{$sqlanternPath}/.htaccess");
 			$htaccessRenamed = true;
 		}
+		
+		/*
+		If a user has module installation rights, they are a super admin anyway, so grant them permissions for SQLantern automatically here.
+		!!! REMOVE PERMISSIONS ON UNINSTALL !!!
+		*/
 		
 		// add `event` to add the menu item
 		if (version_compare(VERSION, "3.0", ">=")) {	// v3

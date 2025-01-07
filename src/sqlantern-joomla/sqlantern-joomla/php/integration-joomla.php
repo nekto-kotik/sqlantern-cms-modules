@@ -40,7 +40,8 @@ $joomlaLifetimeSec = 60 * (int) $jConf->lifetime;
 
 require_once(__DIR__ . "/php-mysqli.php");
 
-sqlConnect();	// otherwise `sqlEscape` right below won't work
+
+sqlConnect();	// otherwise `sqlEscape` below won't work
 
 $ok = true;
 
@@ -89,6 +90,27 @@ else {
 		$afterTimeSql = time() - $joomlaLifetimeSec;
 		// hm... `6` is `Super Users` for some reason, while the Super User group ID is `8`, what is going on?..
 		// oh, it's `viewlevels`...
+		/*
+		The logic below works in Joomla 5.0.3, but not in 5.1.2
+		And the reason is Joomla stopped using `sessions.userid` entirely somewhere between those versions.
+		
+		And looks like even older Joomla (like 3.6) already had all the information in session, but still used `userid` for no good reason, as far as I can tell.
+		
+		The solution is to read the session data from the database and then `session_decode` the data.
+		And there are several problems here:
+		- `session_decode` decodes directly into `$_SESSION` and there is no good workaround for it - PHP serialization looks close, but it's different for some reason
+		- Joomla 3 has the strangest workaround, without which it's sessions really can't be decoded - `$data = str_replace('\0\0\0', chr(0) . '*' . chr(0), $data);` (although this workaround shouldn't hurt in Joomla 5 as well), see "/libraries/joomla/session/storage/database.php"
+		- Joomla 3 has only `session_decode`d session, but Joomla 5 also base64-encodes the data (probably to stop using the workaround above) - so, I must additionally check if the data is base64-encoded
+		- Then I'll need to substitute some object classes, I suppose, but I didn't even go there in testing yet
+		
+		There is a lot to test about it and it take a lot of time every time I try to dive into it.
+		And I'm very worried to publish a non-secure version just because I did some checks wrong.
+		So, I don't know so far when I'll be able to make Joomla 5 compatible version.
+		
+		See files:
+		"/libraries/joomla/session/storage/database.php" in Joomla 3.6
+		"/libraries/vendor/joomla/session/src/Handler/DatabaseHandler.php" in Joomla 5
+		*/
 		$row = sqlRow("
 			SELECT
 				sessions.session_id,
@@ -139,7 +161,7 @@ else {
 	}
 }
 
-// get language
+$sys["language"] = "";	// `sqlConnect` has been rewritten to always use `translation`, and non-set `$sys["language"]` triggered a Notice
 $sys["language"] = "en";	// English by default, if compatible language not found
 
 $row = sqlRow("

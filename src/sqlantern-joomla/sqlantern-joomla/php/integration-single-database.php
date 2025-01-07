@@ -42,15 +42,15 @@ function sqlModuleForceSingleDatabase() {
 	$incoming["database_name"] = $sys["db"]["dbName"];
 	unset($incoming["list_connections"], $incoming["list_db"]);
 	
-	define("SQL_INCOMING_DATA", json_encode($incoming));
+	define("SQLANTERN_INCOMING_DATA", json_encode($incoming));
 	
 	session_start();
 	if (!isset($_SESSION["connections"])) {
-		$ivLength = openssl_cipher_iv_length(SQL_CIPHER_METHOD);
+		$ivLength = openssl_cipher_iv_length(SQLANTERN_CIPHER_METHOD);
 		$iv = openssl_random_pseudo_bytes($ivLength);
 		// keys actually combine IV and key, to store them in one string
-		$loginKey = $iv . openssl_random_pseudo_bytes(SQL_CIPHER_KEY_LENGTH);
-		$passwordKey = $iv . openssl_random_pseudo_bytes(SQL_CIPHER_KEY_LENGTH);
+		$loginKey = $iv . openssl_random_pseudo_bytes(SQLANTERN_CIPHER_KEY_LENGTH);
+		$passwordKey = $iv . openssl_random_pseudo_bytes(SQLANTERN_CIPHER_KEY_LENGTH);
 		$_SESSION["connections"] = [
 			[
 				"login" => $loginKey,
@@ -69,19 +69,19 @@ function sqlModuleForceSingleDatabase() {
 		"port" => $sys["db"]["port"],
 	]);
 	
-	$ivLength = openssl_cipher_iv_length(SQL_CIPHER_METHOD);
+	$ivLength = openssl_cipher_iv_length(SQLANTERN_CIPHER_METHOD);
 	
 	$encryptWhat = $loginJson;
 	$encryptWith = $_SESSION["connections"][0]["login"];
 	$iv = substr($encryptWith, 0, $ivLength);
 	$key = substr($encryptWith, $ivLength);
-	$encryptedLogin = openssl_encrypt($encryptWhat, SQL_CIPHER_METHOD, $key, OPENSSL_RAW_DATA, $iv);
+	$encryptedLogin = openssl_encrypt($encryptWhat, SQLANTERN_CIPHER_METHOD, $key, OPENSSL_RAW_DATA, $iv);
 	
 	$encryptWhat = $sys["db"]["password"];
 	$encryptWith = $_SESSION["connections"][0]["password"];
 	$iv = substr($encryptWith, 0, $ivLength);
 	$key = substr($encryptWith, $ivLength);
-	$encryptedPassword = openssl_encrypt($encryptWhat, SQL_CIPHER_METHOD, $key, OPENSSL_RAW_DATA, $iv);
+	$encryptedPassword = openssl_encrypt($encryptWhat, SQLANTERN_CIPHER_METHOD, $key, OPENSSL_RAW_DATA, $iv);
 	
 	$con = [
 		[
@@ -91,13 +91,13 @@ function sqlModuleForceSingleDatabase() {
 	];
 	
 	// connections come from a COOKIE, so force that COOKIE value, without setting the actual cookie itself:
-	$_COOKIE[SQL_COOKIE_NAME] = base64_encode(serialize($con));
+	$_COOKIE[SQLANTERN_COOKIE_NAME] = base64_encode(serialize($con));
 	
 	// if we're here, the connection is allowed and confirmed, let's add a special integration custom request here, too
 	if (isset($_GET["cms_settings"])) {
 		// this version extraction is asinine, but I can't come up with a less terrible way than this, without rewriting the SQLantern just for the sake of returning the version, which is also stupid...
 		$txt = file_get_contents(__DIR__ . "/index.php");
-		$pos = strpos($txt, "\"SQL_VERSION\"");
+		$pos = strpos($txt, "\"SQLANTERN_VERSION\"");
 		$part = substr($txt, $pos);
 		$parts = explode("\n", $part);
 		$versionLine = array_shift($parts);	// value like `"SQL_VERSION" => "0.9.18 beta",	// 2310xx`

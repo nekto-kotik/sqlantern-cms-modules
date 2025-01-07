@@ -7,10 +7,13 @@ https://github.com/nekto-kotik/sqlantern-cms-modules
 https://github.com/nekto-kotik/sqlantern
 */
 
-define("SQL_MYSQLI_CHARSET", "UTF8MB4");
-define("SQL_POSTGRES_CHARSET", "UTF8");
+define("SQLANTERN_MYSQLI_CHARSET", "UTF8MB4");
+define("SQLANTERN_POSTGRES_CHARSET", "UTF8");
+define("SQLANTERN_SHOW_CONNECTION_ERROR", false);
+define("SQLANTERN_USE_SSL", false);
+define("SQLANTERN_TRUST_SSL", false);
 define(
-	"SQL_RUN_AFTER_CONNECT",
+	"SQLANTERN_RUN_AFTER_CONNECT",
 	json_encode([
 		"mysqli" => [
 			"SET SESSION sql_mode = (SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))",
@@ -21,13 +24,15 @@ define(
 		],
 	])
 );
-define("SQL_SESSION_NAME", "SQLANTERN_SESS_ID");
-define("SQL_COOKIE_NAME", "sqlantern_client");
-define("SQL_CIPHER_METHOD", "aes-256-cbc");
-define("SQL_CIPHER_KEY_LENGTH", 32);
-define("SQL_NUMBER_FORMAT", "builtInNumberFormat");
+define("SQLANTERN_SESSION_NAME", "SQLANTERN_SESS_ID");
+define("SQLANTERN_COOKIE_NAME", "sqlantern_client");
+define("SQLANTERN_CIPHER_METHOD", "aes-256-cbc");
+define("SQLANTERN_CIPHER_KEY_LENGTH", 32);
+define("SQLANTERN_NUMBER_FORMAT", "builtInNumberFormat");
 
 // since this file is linked in `index.php` before anything else, basically ANY modification can be written here and it is expected
+
+$sys = [];
 
 require_once __DIR__ . "/integration-single-database.php";
 require_once __DIR__ . "/integration-joomla.php";

@@ -23,10 +23,9 @@ Tab.prototype.listDB = () => {};
 panel.listEvents = (tmp, drag) => {
 	tmp.addEventListener('scroll', function(e) {
 		const idx = app.curScreen;
-		if (!app.scroll[idx]) return;
 		if (app.scroll[idx][0] == true) {
 			app.scroll[idx][1] = tmp.scrollLeft;
-			document.body.classList.remove('scroll');
+			document.querySelectorAll('.main .one-list')[idx].classList.remove('scroll');
 		}
 	});
 	tmp.querySelector('.add-new').addEventListener('click', () => {
@@ -45,7 +44,15 @@ panel.listEvents = (tmp, drag) => {
 		newTab.tab.querySelector('.db-name').textContent = obj.database;
 		const obj2 = {
 			body: newTab.requestListTables(),
-			callback: (res) => newTab.listTables(res),
+			callback: res => {
+				newTab.listTables(res);
+				const ins = `${newTab.connection}_${newTab.database}`;
+				const flag = app.opened_db.indexOf(ins) == -1;
+				if (config.display_export && newTab.tab.classList.contains('open-export') && flag) {
+					newTab.export();
+					app.opened_db.push(ins);
+				}
+			},
 			forError: newTab.tab.querySelector('.content'),
 		};
 		newTab.request(obj2);

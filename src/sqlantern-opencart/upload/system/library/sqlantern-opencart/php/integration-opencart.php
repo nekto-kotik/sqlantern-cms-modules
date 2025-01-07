@@ -77,17 +77,17 @@ function getSessionData() {
 	session_abort();	// "Discard session array changes and finish session"
 	
 	// SQLantern session MUST be separated from OpenCart session, but it tends to share it without the workaround below:
-	session_name(SQL_SESSION_NAME);	// defined in `config.sys.php`
-	if (!isset($_COOKIE[SQL_SESSION_NAME])) {	// SQLantern only supports cookie-based sessions!
+	session_name(SQLANTERN_SESSION_NAME);	// defined in `config.sys.php`
+	if (!isset($_COOKIE[SQLANTERN_SESSION_NAME])) {	// SQLantern only supports cookie-based sessions!
 		if (function_exists("session_create_id")) {	// `session_create_id` is PHP 7+, to my surprise...
-			$_COOKIE[SQL_SESSION_NAME] = session_create_id();
+			$_COOKIE[SQLANTERN_SESSION_NAME] = session_create_id();
 		}
 		else {
-			$_COOKIE[SQL_SESSION_NAME] = uniqid("o" . bin2hex(inet_pton($_SERVER["REMOTE_ADDR"]))) . "s";	// I can only hope that's unique enough for this module on PHP 5.6...
+			$_COOKIE[SQLANTERN_SESSION_NAME] = uniqid("o" . bin2hex(inet_pton($_SERVER["REMOTE_ADDR"]))) . "s";	// I can only hope that's unique enough for this module on PHP 5.6...
 		}
 		$_SESSION = [];
 	}
-	session_id($_COOKIE[SQL_SESSION_NAME]);
+	session_id($_COOKIE[SQLANTERN_SESSION_NAME]);
 	
 	// clear SQLantern session:
 	//session_start(); $_SESSION = []; session_write_close();
@@ -111,7 +111,8 @@ $sys["db"] = [
 require_once(__DIR__ . "/php-mysqli.php");
 // TODO . . . DB_DRIVER can be "mysqli" or "pgsql"
 
-sqlConnect();	// otherwise `sqlEscape` right below won't work
+$sys["language"] = "";	// `sqlConnect` has been rewritten to always use `translation`, and non-set `$sys["language"]` triggered a Notice
+sqlConnect();	// otherwise `sqlEscape` directly below won't work
 $ocSessionIdSql = sqlEscape($ocSessionId);
 
 /*

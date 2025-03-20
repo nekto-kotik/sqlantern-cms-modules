@@ -256,9 +256,15 @@ if ($ok && ($sys["session_engine"] == "db")) {
 	//var_dump(["ocSessionId" => $ocSessionId, "ocSessionIdSql" => $ocSessionIdSql, "check" => $check, ]);
 	if ($check && $check["data"]) {
 		$tmp = json_decode($check["data"], true);
-		$userId = (int) $tmp["user_id"];
-		$token = $tmp["user_token"];
-		$ok = userHasAccess($userId, $token);
+		//var_dump(["tmp" => $tmp, ]);
+		if (isset($tmp["user_id"]) && isset($tmp["user_token"])) {
+			$userId = (int) $tmp["user_id"];
+			$token = $tmp["user_token"];
+			$ok = userHasAccess($userId, $token);
+		}
+		else {
+			$ok = false;
+		}
 	}
 	else {
 		$ok = false;

@@ -11,7 +11,27 @@ https://github.com/nekto-kotik/sqlantern
 
 
 /*
- TODO ... can it be made admin-only in `xml` somehow?
+ TODO . . . can it be made admin-only in `xml` somehow?
+ 
+ FIXME . . . I can create a proper menu item the following way:
+ - create an admin-only menu
+ - add one item to it (custom URL) with Target Window "New Window With Navigation"
+ - create an Administrator module of type "Administrator menu" with position "menu" (disable "Checks")
+ - "Link icon class" must be "icon-fw fa-up-right-from-square" ("icon-fw fa-arrow-up-right-from-square" looks exactly the same) or "icon-fw fa-square-arrow-up-right" or "icon-fw fa-square-up-right"
+ - PROFIT without messing with HTML
+ It works in Joomla 5. I'm sure it works in Joomla 4 (but haven't tested yet).
+ It works in Joomla 3 and might actually work with versions below 3.6, which I don't support at the moment (not that it matters that much).
+ Problem: The icon for `<a>`s with `target="_blank"` fucks it visually in Joomla 5 :-(
+ Solution: Inject the following crazy style:
+ ```
+ .main-nav a[href*="sqlantern"]:before {
+   display: none; }
+ ```
+ 
+ Joomla 3 with its horizontal menu looks fine, but I'd really like to add an item into "System" menu instead of creating a global item - can I somehow legitimately do that?
+ As far as I can tell, the standard menu is defined in `/administrator/components/com_menus/presets/joomla.xml`
+ I don't know... I can't say I really care about Joomla 3 that much to override the preset, I might introduce new problems there instead of solving my small non-issue.
+ 
 */
 
 

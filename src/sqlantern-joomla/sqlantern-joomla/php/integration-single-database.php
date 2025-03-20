@@ -1,7 +1,7 @@
 <?php
 /*
 This file is part of SQLantern CMS integration
-Copyright (C) 2023 Misha Grafski AKA nekto
+Copyright (C) 2023, 2024, 2025 Misha Grafski AKA nekto
 License: GNU General Public License v3.0
 https://github.com/nekto-kotik/sqlantern-cms-modules
 https://github.com/nekto-kotik/sqlantern
@@ -40,6 +40,12 @@ function sqlModuleForceSingleDatabase() {
 	
 	$incoming["connection_name"] = $connectionName;
 	$incoming["database_name"] = $sys["db"]["dbName"];
+	
+	if (isset($incoming["list_connections"])) {
+		echo json_encode(["connections" => ["integration"]]);	// list one fake connection for keep-alive
+		die();
+	}
+	
 	unset($incoming["list_connections"], $incoming["list_db"]);
 	
 	define("SQLANTERN_INCOMING_DATA", json_encode($incoming));

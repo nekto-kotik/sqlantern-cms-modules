@@ -1,6 +1,6 @@
 /*
 This file is part of SQLantern CMS integration
-Copyright (C) 2023 Misha Grafski AKA nekto
+Copyright (C) 2023, 2024, 2025 Misha Grafski AKA nekto
 License: GNU General Public License v3.0
 https://github.com/nekto-kotik/sqlantern-cms-modules
 https://github.com/nekto-kotik/sqlantern
@@ -97,6 +97,7 @@ window.addEventListener(
 		else {
 			config.windowLoaded = true;
 		}
+		app.connections = ['integration'];	// enforce the new connections-based keep-alive
 	}
 );
 

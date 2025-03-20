@@ -38,7 +38,31 @@ $dbPre = $jConf->dbprefix;
 
 $joomlaLifetimeSec = 60 * (int) $jConf->lifetime;
 
-require_once(__DIR__ . "/php-mysqli.php");
+require_once(__DIR__ . "/php-mysqli.php");	// FIXME . . . Make PostgreSQL also work, it is not complicated at all, is it?
+
+
+$sys["language"] = "";	// `sqlConnect` has been rewritten to always use `translation`, and non-set `$sys["language"]` triggered a Notice
+$sys["language"] = "en";	// English by default, if compatible language not found
+
+$row = sqlRow("
+	SELECT params
+	FROM {$dbPre}extensions
+	WHERE 	type = 'component'
+			AND element = 'com_languages'
+	LIMIT 1
+");
+if ($row) {
+	$joomlaToSqlantern = [
+		"en" => "en",
+		//"ru" => "uk",	// I gave up to Liana, russian-speaking admins won't get Ukrainian as the default language anymore
+		"uk" => "uk",
+	];
+	$tmp = json_decode($row["params"], true);
+	$twoLetterCode = mb_substr($tmp["administrator"], 0, 2);
+	if (isset($joomlaToSqlantern[$twoLetterCode])) {
+		$sys["language"] = $joomlaToSqlantern[$twoLetterCode];
+	}
+}
 
 
 sqlConnect();	// otherwise `sqlEscape` below won't work
@@ -158,29 +182,6 @@ else {
 			SET `time` = {$newTimeSql}
 			WHERE session_id = '{$joomlaSessionIdSql}'
 		");
-	}
-}
-
-$sys["language"] = "";	// `sqlConnect` has been rewritten to always use `translation`, and non-set `$sys["language"]` triggered a Notice
-$sys["language"] = "en";	// English by default, if compatible language not found
-
-$row = sqlRow("
-	SELECT params
-	FROM {$dbPre}extensions
-	WHERE 	type = 'component'
-			AND element = 'com_languages'
-	LIMIT 1
-");
-if ($row) {
-	$joomlaToSqlantern = [
-		"en" => "en",
-		//"ru" => "uk",	// I gave up to Liana, russian-speaking admins won't get Ukrainian as the default language anymore
-		"uk" => "uk",
-	];
-	$tmp = json_decode($row["params"], true);
-	$twoLetterCode = mb_substr($tmp["administrator"], 0, 2);
-	if (isset($joomlaToSqlantern[$twoLetterCode])) {
-		$sys["language"] = $joomlaToSqlantern[$twoLetterCode];
 	}
 }
 

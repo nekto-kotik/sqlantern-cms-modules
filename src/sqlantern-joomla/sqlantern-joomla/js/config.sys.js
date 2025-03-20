@@ -79,6 +79,7 @@ window.addEventListener(
 		else {
 			config.windowLoaded = true;
 		}
+		app.connections = ['integration'];	// enforce the new connections-based keep-alive
 	}
 );
 

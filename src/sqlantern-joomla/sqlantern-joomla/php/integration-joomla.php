@@ -8,7 +8,7 @@ https://github.com/nekto-kotik/sqlantern
 */
 
 define("JOOMLA_ROOT", realpath(__DIR__ . "/../../../"));
-require_once(JOOMLA_ROOT . "/configuration.php");
+require_once JOOMLA_ROOT . "/configuration.php";
 
 $jConf = new JConfig;
 
@@ -38,7 +38,7 @@ $dbPre = $jConf->dbprefix;
 
 $joomlaLifetimeSec = 60 * (int) $jConf->lifetime;
 
-require_once(__DIR__ . "/php-mysqli.php");	// FIXME . . . Make PostgreSQL also work, it is not complicated at all, is it?
+require_once __DIR__ . "/php-mysqli.php";	// FIXME . . . Make PostgreSQL also work, it is not complicated at all, is it?
 
 
 $sys["language"] = "";	// `sqlConnect` has been rewritten to always use `translation`, and non-set `$sys["language"]` triggered a Notice

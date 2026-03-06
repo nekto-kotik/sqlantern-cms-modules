@@ -1,16 +1,28 @@
 <?php
 class ControllerExtensionModuleSqlanternOpencart extends Controller {
 	
+	private $debug = false;
+	private $logName = "sqlantern.log";
+	
 	public function install() {
 		/*
 		Problem: OpenCart installer doesn't copy Linux hidden files (because of the irresponsible `glob` with "*").
 		Solution: Deliver ".htaccess" as "htaccess.txt" and rename on install, if it's not renamed yet.
 		*/
+		$log = false;
+		if ($this->debug) {
+			$log = new Log($this->logName);
+			$log->write("=== Install ===");
+		}
+		
 		$htaccessRenamed = false;
 		$sqlanternPath = DIR_SYSTEM . "library/sqlantern-opencart";
 		if (file_exists("{$sqlanternPath}/htaccess.txt")) {
 			rename("{$sqlanternPath}/htaccess.txt", "{$sqlanternPath}/.htaccess");
 			$htaccessRenamed = true;
+			if ($log) {
+				$log->write("`.htaccess` renamed");
+			}
 		}
 		
 		/*
@@ -50,12 +62,18 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 					"sqlantern_opencart.ocmod.zip",
 					array_column($allExtensions, "filename")
 				);
+				if ($log) {
+					$log->write("Extensions history requested, row = {$row}");
+				}
 				if ($row !== false) {	// who knows, what could go wrong...
 					$extensionInstallId = (int) $allExtensions[$row]["extension_install_id"];
 					$this->model_setting_extension->addExtensionPath(
 						$extensionInstallId,
 						"system/library/sqlantern-opencart/.htaccess"
 					);
+					if ($log) {
+						$log->write("`.htaccess` added to extension history, extensionInstallId = {$extensionInstallId}");
+					}
 				}
 			}
 		}
@@ -70,9 +88,17 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 			"admin/view/common/column_left/before",
 			"extension/module/sqlantern_opencart/add_menu_item"
 		);
+		if ($log) {
+			$log->write("Event added");
+		}
 	}
 	
 	public function uninstall() {
+		$log = false;
+		if ($this->debug) {
+			$log = new Log($this->logName);
+			$log->write("=== Uninstall ===");
+		}
 		// remove `event`
 		if (version_compare(VERSION, "3.0", ">=")) {	// v3
 			$this->load->model("setting/event");
@@ -81,6 +107,9 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 		else {	// v2.3
 			$this->load->model("extension/event");
 			$this->model_extension_event->deleteEvent("sqlantern_menu_item");
+		}
+		if ($log) {
+			$log->write("Event deleted");
 		}
 	}
 	
@@ -118,9 +147,17 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 		if (($this->request->server["REQUEST_METHOD"] == "POST") && $this->validate()) {
 			if ((int) $this->request->post["module_sqlantern_status"]) {
 				$events->enableEvent($eventDetails["event_id"]);
+				if ($this->debug) {
+					$log = new Log($this->logName);
+					$log->write("=== Event ENABLED in module ===");
+				}
 			}
 			else {
 				$events->disableEvent($eventDetails["event_id"]);
+				if ($this->debug) {
+					$log = new Log($this->logName);
+					$log->write("=== Event DISABLED in module ===");
+				}
 			}
 			$this->session->data["success"] = $this->language->get("text_success");
 			$this->response->redirect($this->url->link($extensionsRoute, "{$userTokenURL}&type=module", true));
@@ -181,8 +218,18 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 		// add a menu item
 		//var_dump(["data_menus" => $data["menus"], ]);
 		
+		$log = false;
+		if ($this->debug) {
+			$log = new Log($this->logName);
+			$log->write("=== Event `add_menu_item` ===");
+		}
+		
 		// all users from user groups with module permission get the menu item
 		if ($this->user->hasPermission("modify", "extension/module/sqlantern_opencart")) {
+			
+			if ($log) {
+				$log->write("Permissions OK");
+			}
 			
 			if (version_compare(VERSION, "3.0", ">=")) {	// v3
 				$token = $this->session->data["user_token"];
@@ -191,10 +238,16 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 				$token = $this->session->data["token"];
 			}
 			$token64 = base64_encode(json_encode(["token" => $token]));
+			if ($log) {
+				$log->write("Token OK");
+			}
 			
 			foreach ($data["menus"] as &$m) {
 				if ($m["id"] != "menu-system") {
 					continue;
+				}
+				if ($log) {
+					$log->write("`menu-system` found");
 				}
 				$m["children"][] = [
 					"name" => "SQLantern",
@@ -202,6 +255,9 @@ class ControllerExtensionModuleSqlanternOpencart extends Controller {
 					"children" => [],
 				];
 				break;
+			}
+			if ($log) {
+				$log->write("Event end");
 			}
 		}
 	}

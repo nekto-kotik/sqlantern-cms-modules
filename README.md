@@ -1,5 +1,5 @@
 # SQLantern CMS extensions (Joomla, OpenCart)
-Current version: v1.9.14β (public beta)\
+Current version: v1.9.15β (public beta)\
 License: [GNU General Public License v3.0](LICENSE)\
 [Українською](README_uk.md)
 
@@ -36,12 +36,6 @@ You are limited to the website's host and database and can't access any other ho
 You don't (and can't) enter login and password. Connection panels and databases panels are not available and they won't work even if you hack them in.
 
 Each integration also has some individual limitations.
-
-## How to prevent CMS session expiration
-Enable the "Keep-alive" in the database panel (the one with the tables' list): ![](https://sqlantern.com/images/icon_keep_alive.png)\
-This will automatically reconnect to the server periodically on the background and prolong the session when possible (in the same way both Joomla and OpenCart do that).\
-Unfortunately, it only prolongs database-based sessions, but not "native" sessions.\
-Also, this auto-prolongation can be interrupted and disabled by the browser itself if the SQLantern tab gets _discarded_ (if you don't know, very simply speaking, that's when the tab was "on the background" for a long enough time).
 
 ## SQLantern for Joomla
 ### Installation
@@ -100,10 +94,10 @@ OpenCart/ocStore 3.x
 
 ## Copyright
 SQLantern PHP code, CMS extensions PHP and JS code:\
-(C) 2022, 2023 Misha Grafski aka nekto
+(C) 2022, 2023, 2024, 2025 Misha Grafski aka nekto
 
 SQLantern JS, HTML, CSS code:\
-(C) 2022, 2023 Svitlana Militovska
+(C) 2022, 2023, 2024, 2025 Svitlana Militovska
 
 Simplebar:\
 Made by Adrien Denat from a fork by Jonathan Nicol\

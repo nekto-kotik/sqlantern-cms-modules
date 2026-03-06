@@ -75,7 +75,7 @@ class PlgSystemSqlantern extends JPlugin {
 		) {
 			//$module->content = "???";	// confirmed: the content is changeable
 			
-			// the links go to `index.html`, because many servers and hosting account don't consider `index.html` an "index file", and directories' listing is universally disabled, and as a result, just going to `sqlantern-joomla/` often results in "403 Forbidden"
+			// the links go to `index.html`, because surprisingly many servers and hosting accounts don't consider `index.html` an "index file", and directories' listing is universally disabled, and as a result, just going to `sqlantern-joomla/` often results in "403 Forbidden", making `index.html` required
 			
 			if ($version4) {	// 4.0+
 				// I'm sorry to resort to adding inline style, but `target="_blank"` adds an extra icon, which doesn't fit there at all
@@ -101,7 +101,7 @@ class PlgSystemSqlantern extends JPlugin {
 				$explodeBy = "<li class=\"divider\"><span></span></li>";
 				$parts = explode($explodeBy, $module->content);
 				
-				if (count($parts) < 4) {	// it's a "disabled" menu, don't do anything, there is no place insert a menu item anyway
+				if (count($parts) < 4) {	// it's a "disabled" menu, don't do anything, there is no place to insert a menu item anyway
 					return;
 				}
 				

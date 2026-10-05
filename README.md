@@ -1,5 +1,5 @@
 # SQLantern CMS extensions (Joomla, OpenCart)
-Current version: v1.9.15β (public beta)\
+Current version: v1.9.16β (public beta)\
 License: [GNU General Public License v3.0](LICENSE)\
 [Українською](README_uk.md)
 
@@ -94,10 +94,10 @@ OpenCart/ocStore 3.x
 
 ## Copyright
 SQLantern PHP code, CMS extensions PHP and JS code:\
-(C) 2022, 2023, 2024, 2025 Misha Grafski aka nekto
+(C) 2022, 2023, 2024, 2025, 2026 Misha Grafski aka nekto
 
 SQLantern JS, HTML, CSS code:\
-(C) 2022, 2023, 2024, 2025 Svitlana Militovska
+(C) 2022, 2023, 2024, 2025, 2026 Svitlana Militovska
 
 Simplebar:\
 Made by Adrien Denat from a fork by Jonathan Nicol\

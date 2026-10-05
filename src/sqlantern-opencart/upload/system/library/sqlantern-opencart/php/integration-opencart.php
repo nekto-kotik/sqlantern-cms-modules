@@ -21,7 +21,16 @@ This is more of a reminder for myself.
 var_dump(["DIR" => __DIR__, "FILE" => __FILE__, "SCRIPT_FILENAME" => $_SERVER["SCRIPT_FILENAME"], "sym_dir" => pathinfo($_SERVER["SCRIPT_FILENAME"], PATHINFO_DIRNAME), ]);
 */
 
-// remove "/admin/sqlantern-opencart/php" from the end to work correctly either symlinked or not
+// remove "/system/library/sqlantern-opencart/php" from the end to work correctly either symlinked or not
+/*
+	FIXME . . . `/system` might be renamed, there is `DIR_SYSTEM` for doing exactly that.
+	At the same time I CANNOT use `DIR_SYSTEM` from `config.php`, because I don't know where the root is... especially if the `system` is moved outside OpenCart root (which is technically possible), I won't ever know where the OpenCart root is, there is just no way to know...
+	Should I add a DB configuration value containing `DIR_SYSTEM`? But what if it changes? And I cannot connect to the database without loading `config.php` anyway, so that's also not a solution.
+	I need some deeper integration. Like get the configuration via API or something. I know the domain. I could extend the existing OpenCart API to return `DIR_SYSTEM`. And then what? Store it in the session? I don't think I can without creating the session properly much further in the code...
+	This is going into weird and wicked direction.
+	If anybody gets it broken, it'd be easier to add an environment variable via `.htaccess`, similar to other variables.
+	I don't see a clean automatic way of finding OpenCart root directory if `DIR_SYSTEM` is outside of it.
+*/
 define(
 	"OPENCART_ROOT",
 	mb_substr(

@@ -1,5 +1,5 @@
 # Розширення SQLantern для CMS (Joomla, OpenCart)
-Поточна версія: v1.9.15β (публічна бета)\
+Поточна версія: v1.9.16β (публічна бета)\
 Ліцензія: [GNU General Public License v3.0](LICENSE)
 
 Це офіційний репозиторій розширень SQLantern для CMS: інтеграції SQLantern із Joomla та OpenCart.\
@@ -93,10 +93,10 @@ OpenCart/ocStore 3.x
 
 ## Авторські права
 SQLantern, код PHP, а також код PHP і JS розширень для CMS:\
-(C) 2022, 2023, 2024, 2025 Михайло Графський aka nekto
+(C) 2022, 2023, 2024, 2025, 2026 Михайло Графський aka nekto
 
 SQLantern, код JS, HTML, CSS:\
-(C) 2022, 2023, 2024, 2025 Світлана Мілітовська
+(C) 2022, 2023, 2024, 2025, 2026 Світлана Мілітовська
 
 Simplebar:\
 Зроблений Adrien Denat з форку Jonathan Nicol\
